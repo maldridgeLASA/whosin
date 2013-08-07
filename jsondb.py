@@ -62,7 +62,7 @@ class db:
             logging.warning("Key does not exist")
             return 1
         
-    def keylookup(self, key):
+    def lookup(self, key):
         logging.info("Looking up key %s")
         if key in self.db: #check if key exists
             logging.info("Key found")
