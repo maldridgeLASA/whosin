@@ -1,35 +1,15 @@
 '''
-Simple JSON database to store key lookup, namename, and authorization values.
+Simple JSON database to store key, name, and authorization values.
 Author: Michael Aldridge
-
-Documentation:
-__init__: takes datastore as an argument.  Datastore should be the path to the
-file where the database will be stored.
-
-addkey: adds a key to the system.  Takes key, name, and auth, and creates a new
-entry.  If upsert is set, an existing entry may be updated.  Teturns 0 on
-successful completion.
-
-delkey: removes a key from the system.  Takes key and returns status code (1 for
-error, 0 for successful completion)
-
-keylookup: looks up a key in the database.  Takes key and returns namename, auth
-on success; otherwise, returns None.
-
-namelist: takes no arguments, returns a list of names.
-
-_save: internal function called to save the database.  Called any time that an
-action modifies the database stored in RAM.
-
-_verifyt3: checks the t3 file before committing the backup by overwriting the old
-data file. Returns nothing on success, prints the db to the screen on error.
 '''
 import json
 import logging
 
 
 class db:
+    '''Class containing all database code'''
     def __init__(self, datastore):
+	'''Open the datastore file and read in the existing database from disk'''
         self.t3file = datastore
         logging.debug("Loading 't3'->'t1'")
         t3data=open(self.t3file)
@@ -37,32 +17,35 @@ class db:
         t3data.close()
 
     def add(self, key, name, auth, upsert=False):
+	'''Add a key to the database, if upsert is set, update an existing key'''
         logging.info("Adding new key to system")
         if key in self.db: #check if key exists
             if upsert:
                 self.db[key]={"name":name, "auth":auth}
-                return 0
+                return True
             else:
                 logging.error("name '%s' already exists with key %s; (is upsert set?)",name,key) 
-                return 1
+                return False
         else:
             self.db[key]={"name":name, "auth": auth}
             logging.info("Added name %s with key %s to database", name, key)
             self._save()
-            return 0
+            return False
 
     def remove(self, key):
+	'''Remove an existing key from the network'''
         logging.info("Removing key from system")
         if key in self.db: #check if key exists
             del self.db[key]
             logging.info("Key id %s removed", key)
             self._save()
-            return 0
+            return True
         else:
             logging.warning("Key does not exist")
-            return 1
+            return True
         
     def lookup(self, key):
+	'''Checks if the given key value exists in the database, and returns data if found'''
         logging.info("Looking up key %s")
         if key in self.db: #check if key exists
             logging.info("Key found")
@@ -74,6 +57,7 @@ class db:
             return None
 
     def namelist(self):
+	'''Gets a list of names from the database'''
         names=[]
         logging.info("Retrieving list of names")
         for key in self.db.keys():
@@ -82,6 +66,7 @@ class db:
         return names
 
     def _save(self):
+	'''Writes the database to disk any time an operation is made that changes it'''
         logging.info("Syncing 't1'->'t3'")
         t3data=open(self.t3file, 'w')
         #sync t1data to t3data
