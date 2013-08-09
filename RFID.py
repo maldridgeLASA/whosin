@@ -18,7 +18,7 @@ class RFIDReader:
         self.port = serial.Serial(port, baud)
         logging.info("Opened serial port: ", port)
 
-    def readProtocol(self):
+    def read(self):
         self.serIn = self.port.readline()
         logging.info('Read in: "%s"'%(self.serIn))
         # "" signifies the start of the information stream, while "" denotes
@@ -39,7 +39,8 @@ class RFIDReader:
         if self.calcCksm == self.scanCksm:
             self.isValid = True
             logging.info("Scan was good.")
+            return self.ID
         else:
             self.isValid = False
-            logging.info("Scan was bad. Provided checksum was %i, while \
-calculated checksum was %i"%(self.scanCksm, self.calcCksm))
+            logging.info("Scan was bad. Provided checksum was %i, while calculated checksum was %i"%(self.scanCksm, self.calcCksm))
+            return None
